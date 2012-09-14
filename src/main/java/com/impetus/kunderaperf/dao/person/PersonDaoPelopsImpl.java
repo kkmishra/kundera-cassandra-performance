@@ -31,69 +31,69 @@ import com.impetus.kunderaperf.dto.UserDTO;
 
 /**
  * @author amresh.singh
- *
+ * 
  */
-public class PersonDaoPelopsImpl extends PelopsBaseDao implements PersonDao {
+public class PersonDaoPelopsImpl extends PelopsBaseDao implements PersonDao
+{
 
-	@Override
-	public void init() {
-		startup();
-	}
+    @Override
+    public void init()
+    {
+        startup();
+    }
 
-	@Override
-	public void insertPersons(List<PersonDTO> persons) {
-		long t1 = System.currentTimeMillis();		
-		
-		
-		for(PersonDTO person : persons) {
-			insertPerson(person);
-		}	
-		
-		
-		long t2 = System.currentTimeMillis();
-		System.out.println("Pelops Performance: insertPersons(" + persons.size()
-				+ ")>>>\t" + (t2 - t1));
-	}
+    @Override
+    public void insertPersons(List<PersonDTO> persons)
+    {
+        long t1 = System.currentTimeMillis();
 
-	@Override
-	public void cleanup() {
-		shutdown();
-	}
-	
-	
-	private void insertPerson(PersonDTO person) {
-		/*try {
-			Mutator mutator = Pelops.createMutator(getPoolName());
-			List<Column> columns = new ArrayList<Column>();
-			
-			long currentTime = System.currentTimeMillis();
-			
-			Column nameColumn = new Column();
-			nameColumn.setName("user_name".getBytes("utf-8"));
-			nameColumn.setValue(user.getUserName().getBytes("utf-8"));
-			nameColumn.setTimestamp(currentTime);
-			columns.add(nameColumn);
-			
-			Column passwordColumn = new Column();
-			passwordColumn.setName("password".getBytes("utf-8"));
-			passwordColumn.setValue(user.getPassword().getBytes("utf-8"));
-			passwordColumn.setTimestamp(currentTime);
-			columns.add(passwordColumn);
-			
-			Column relationColumn = new Column();
-			relationColumn.setName("relation".getBytes("utf-8"));
-			relationColumn.setValue(user.getRelationshipStatus().getBytes("utf-8"));
-			relationColumn.setTimestamp(currentTime);
-			columns.add(relationColumn);				
-			
-			
-			mutator.writeColumns(COLUMN_FAMILY, user.getUserId() , columns);
-			mutator.execute(ConsistencyLevel.ONE);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (PelopsException e) {
-			e.printStackTrace();
-		}*/
-	}
+        for (PersonDTO person : persons)
+        {
+            insertPerson(person);
+        }
+
+        long t2 = System.currentTimeMillis();
+        System.out.println("Pelops Performance: insertPersons(" + persons.size() + ")>>>\t" + (t2 - t1));
+    }
+
+    @Override
+    public void cleanup()
+    {
+        shutdown();
+    }
+
+    private void insertPerson(PersonDTO person)
+    {
+        /*
+         * try { Mutator mutator = Pelops.createMutator(getPoolName());
+         * List<Column> columns = new ArrayList<Column>();
+         * 
+         * long currentTime = System.currentTimeMillis();
+         * 
+         * Column nameColumn = new Column();
+         * nameColumn.setName("user_name".getBytes("utf-8"));
+         * nameColumn.setValue(user.getUserName().getBytes("utf-8"));
+         * nameColumn.setTimestamp(currentTime); columns.add(nameColumn);
+         * 
+         * Column passwordColumn = new Column();
+         * passwordColumn.setName("password".getBytes("utf-8"));
+         * passwordColumn.setValue(user.getPassword().getBytes("utf-8"));
+         * passwordColumn.setTimestamp(currentTime);
+         * columns.add(passwordColumn);
+         * 
+         * Column relationColumn = new Column();
+         * relationColumn.setName("relation".getBytes("utf-8"));
+         * relationColumn.setValue
+         * (user.getRelationshipStatus().getBytes("utf-8"));
+         * relationColumn.setTimestamp(currentTime);
+         * columns.add(relationColumn);
+         * 
+         * 
+         * mutator.writeColumns(COLUMN_FAMILY, user.getUserId() , columns);
+         * mutator.execute(ConsistencyLevel.ONE); } catch
+         * (UnsupportedEncodingException e) { e.printStackTrace(); } catch
+         * (PelopsException e) { e.printStackTrace(); }
+         */
+    }
 
 }

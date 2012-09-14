@@ -23,11 +23,12 @@ import com.impetus.kunderaperf.dto.PersonDTO;
  * @author amresh.singh
  * 
  */
-public interface PersonDao {
-	public void init();
+public interface PersonDao
+{
+    public void init();
 
-	public void insertPersons(List<PersonDTO> persons);
+    public void insertPersons(List<PersonDTO> persons);
 
-	public void cleanup();
+    public void cleanup();
 
 }

@@ -28,62 +28,60 @@ import com.impetus.kunderaperf.dto.PersonDTO;
 
 /**
  * @author amresh.singh
- *
+ * 
  */
-public class PersonDaoHectorImpl extends HectorBaseDao implements PersonDao {
+public class PersonDaoHectorImpl extends HectorBaseDao implements PersonDao
+{
 
-	@Override
-	public void init() {
-		startup();
-	}
+    @Override
+    public void init()
+    {
+        startup();
+    }
 
-	@Override
-	public void insertPersons(List<PersonDTO> persons) {
-		long t1 = System.currentTimeMillis();
-		// Add rows
-		for (int i = 0; i < persons.size(); i++) {
-			PersonDTO person = persons.get(i);
-			
-			insertPerson(person);
-		}
-		
-		long t2 = System.currentTimeMillis();		
-		System.out.println("Hector Performance: insertUsers(" + persons.size()
-				+ ")>>>\t" + (t2 - t1));
-	}
+    @Override
+    public void insertPersons(List<PersonDTO> persons)
+    {
+        long t1 = System.currentTimeMillis();
+        // Add rows
+        for (int i = 0; i < persons.size(); i++)
+        {
+            PersonDTO person = persons.get(i);
 
-	@Override
-	public void cleanup() {
-		shutdown();		
-	}
-	
-	private void insertPerson(PersonDTO person) {
-		Mutator<String> mutator = HFactory.createMutator(keyspace,
-				StringSerializer.get());
-		
-		mutator.addInsertion(
-				person.getPersonId(),
-				COLUMN_FAMILY_PERSON,
-				HFactory.createSuperColumn(SUPER_COLUMN_PERSONAL_DATA,
-						Arrays.asList(
-								HFactory.createStringColumn("login_id", person.getPersonalData().getLoginId()),
-								HFactory.createStringColumn("first_name", person.getPersonalData().getFirstName()),
-								HFactory.createStringColumn("last_name", person.getPersonalData().getLastName()),
-								HFactory.createStringColumn("country", person.getPersonalData().getCountry())						
-						),
-						stringSerializer, stringSerializer, stringSerializer))
-				.addInsertion(
-						person.getPersonId(),
-						COLUMN_FAMILY_PERSON,
-						HFactory.createSuperColumn(SUPER_COLUMN_PROFESSIONAL_DATA,
-								Arrays.asList(
-										HFactory.createStringColumn("degree", person.getProfessionalData().getDegree()),
-										HFactory.createStringColumn("experience", person.getProfessionalData().getExperience()),
-										HFactory.createStringColumn("company", person.getProfessionalData().getCompany()),
-										HFactory.createStringColumn("primary_skill", person.getProfessionalData().getPrimarySkill())						
-								),
-								stringSerializer, stringSerializer, stringSerializer)
-				);
-		MutationResult me = mutator.execute();		
-	}
+            insertPerson(person);
+        }
+
+        long t2 = System.currentTimeMillis();
+        System.out.println("Hector Performance: insertUsers(" + persons.size() + ")>>>\t" + (t2 - t1));
+    }
+
+    @Override
+    public void cleanup()
+    {
+        shutdown();
+    }
+
+    private void insertPerson(PersonDTO person)
+    {
+        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+
+        mutator.addInsertion(
+                person.getPersonId(),
+                COLUMN_FAMILY_PERSON,
+                HFactory.createSuperColumn(SUPER_COLUMN_PERSONAL_DATA, Arrays.asList(
+                        HFactory.createStringColumn("login_id", person.getPersonalData().getLoginId()),
+                        HFactory.createStringColumn("first_name", person.getPersonalData().getFirstName()),
+                        HFactory.createStringColumn("last_name", person.getPersonalData().getLastName()),
+                        HFactory.createStringColumn("country", person.getPersonalData().getCountry())),
+                        stringSerializer, stringSerializer, stringSerializer)).addInsertion(
+                person.getPersonId(),
+                COLUMN_FAMILY_PERSON,
+                HFactory.createSuperColumn(SUPER_COLUMN_PROFESSIONAL_DATA, Arrays.asList(
+                        HFactory.createStringColumn("degree", person.getProfessionalData().getDegree()),
+                        HFactory.createStringColumn("experience", person.getProfessionalData().getExperience()),
+                        HFactory.createStringColumn("company", person.getProfessionalData().getCompany()),
+                        HFactory.createStringColumn("primary_skill", person.getProfessionalData().getPrimarySkill())),
+                        stringSerializer, stringSerializer, stringSerializer));
+        MutationResult me = mutator.execute();
+    }
 }

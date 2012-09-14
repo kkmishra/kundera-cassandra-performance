@@ -24,40 +24,44 @@ import com.impetus.kunderaperf.dto.PersonDTO;
 
 /**
  * @author amresh.singh
- *
+ * 
  */
-public class PersonDaoKunderaImpl extends KunderaBaseDao implements PersonDao{
+public class PersonDaoKunderaImpl extends KunderaBaseDao implements PersonDao
+{
 
-	@Override
-	public void init() {
-		startup();
-	}
+    @Override
+    public void init()
+    {
+        startup();
+    }
 
-	@Override
-	public void insertPersons(List<PersonDTO> persons) {
-		System.out.println("Inserting persons");
-		long t1 = System.currentTimeMillis();
-			
-		for (int i = 0; i < persons.size(); i++) { 
-			PersonDTO person = persons.get(i);
-			insertPerson(person);
-		}
-		long t2 = System.currentTimeMillis();
-		System.out.println("Kundera Performance: insertUsers(" + persons.size() + ")>>>\t" + (t2 - t1));
-		
-	}
+    @Override
+    public void insertPersons(List<PersonDTO> persons)
+    {
+        System.out.println("Inserting persons");
+        long t1 = System.currentTimeMillis();
 
-	@Override
-	public void cleanup() {
-		shutdown();
-	}
-	
-	private void insertPerson(PersonDTO person) {
-		EntityManager em = emf.createEntityManager();	
-		em.persist(person);
-		em.close();
-	}
-	
-	
+        for (int i = 0; i < persons.size(); i++)
+        {
+            PersonDTO person = persons.get(i);
+            insertPerson(person);
+        }
+        long t2 = System.currentTimeMillis();
+        System.out.println("Kundera Performance: insertUsers(" + persons.size() + ")>>>\t" + (t2 - t1));
+
+    }
+
+    @Override
+    public void cleanup()
+    {
+        shutdown();
+    }
+
+    private void insertPerson(PersonDTO person)
+    {
+        EntityManager em = emf.createEntityManager();
+        em.persist(person);
+        em.close();
+    }
 
 }

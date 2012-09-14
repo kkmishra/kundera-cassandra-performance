@@ -29,72 +29,70 @@ import com.impetus.kunderaperf.dto.UserDTO;
  * @author amresh.singh
  * 
  */
-public class UserDaoHectorImpl extends HectorBaseDao implements UserDao {
+public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
+{
 
-	
+    @Override
+    public void init()
+    {
+        startup();
+    }
 
-	@Override
-	public void init() {
-		startup();
-	}
+    @Override
+    public void insertUsers(List<UserDTO> users, boolean isBulk)
+    {
 
-	@Override
-	public void insertUsers(List<UserDTO> users, boolean isBulk) {
-		
+        long t1 = System.currentTimeMillis();
+        // Add rows
+        for (int i = 0; i < users.size(); i++)
+        {
+            UserDTO user = users.get(i);
 
-		long t1 = System.currentTimeMillis();
-		// Add rows
-		for (int i = 0; i < users.size(); i++) {
-			UserDTO user = users.get(i);
-			
-			insertUser(user);
-		}
-		
-//		long t2 = System.currentTimeMillis();		
-//		System.out.println("Hector Performance: insertUsers(" + users.size()
-//				+ ")>>>\t" + (t2 - t1));
-	}	
+            insertUser(user);
+        }
 
-	@Override
-	public void updateUser(UserDTO userDTO) {
-	}
+        // long t2 = System.currentTimeMillis();
+        // System.out.println("Hector Performance: insertUsers(" + users.size()
+        // + ")>>>\t" + (t2 - t1));
+    }
 
-	@Override
-	public void findUserById(String userId) {
-	}
+    @Override
+    public void updateUser(UserDTO userDTO)
+    {
+    }
 
-	@Override
-	public void findUserByUserName(String userName) {
-	}
+    @Override
+    public void findUserById(String userId, boolean isBulk)
+    {
+    }
 
-	@Override
-	public void deleteUser(String userId) {
-	}	
-	
-	public void insertUser(UserDTO user) {
-		Mutator<String> mutator = HFactory.createMutator(keyspace,
-				StringSerializer.get());
-		
-		mutator.addInsertion(
-				user.getUserId(),
-				COLUMN_FAMILY_USER,
-				HFactory.createStringColumn("user_name", user.getUserName()))
-				.addInsertion(
-						user.getUserId(),
-						COLUMN_FAMILY_USER,
-						HFactory.createStringColumn("password",
-								user.getPassword()))
-				.addInsertion(
-						user.getUserId(),
-						COLUMN_FAMILY_USER,
-						HFactory.createStringColumn("relation",
-								user.getRelationshipStatus()));
-		MutationResult me = mutator.execute();	
-//		mutator.
-	}
+    @Override
+    public void findUserByUserName(String userName, boolean isBulk, String columnValue)
+    {
+    }
 
-	@Override
-	public void cleanup() {
-		shutdown();
-	}
+    @Override
+    public void deleteUser(String userId)
+    {
+    }
+
+    public void insertUser(UserDTO user)
+    {
+        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+
+        mutator.addInsertion(user.getUserId(), COLUMN_FAMILY_USER,
+                HFactory.createStringColumn("user_name", user.getUserName()))
+                .addInsertion(user.getUserId(), COLUMN_FAMILY_USER,
+                        HFactory.createStringColumn("password", user.getPassword()))
+                .addInsertion(user.getUserId(), COLUMN_FAMILY_USER,
+                        HFactory.createStringColumn("relation", user.getRelationshipStatus()));
+        MutationResult me = mutator.execute();
+        // mutator.
+    }
+
+    @Override
+    public void cleanup()
+    {
+        shutdown();
+    }
 }

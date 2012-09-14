@@ -15,23 +15,31 @@
  ******************************************************************************/
 package com.impetus.kunderaperf.dao.person;
 
-
 /**
  * @author amresh.singh
- *
+ * 
  */
-public class PersonDaoFactory {
-	
-	public static PersonDao getPersonDao(String provider) {
-		if(provider.equalsIgnoreCase("kundera")) {
-			return new PersonDaoKunderaImpl();
-		} else if(provider.equalsIgnoreCase("pelops")) {
-			return new PersonDaoPelopsImpl();
-		} else if(provider.equalsIgnoreCase("hector")) {
-			return new PersonDaoHectorImpl();
-		} else {
-			return null;
-		}
-	}
+public class PersonDaoFactory
+{
+
+    public static PersonDao getPersonDao(String provider)
+    {
+        if (provider.equalsIgnoreCase("kundera"))
+        {
+            return new PersonDaoKunderaImpl();
+        }
+        else if (provider.equalsIgnoreCase("pelops"))
+        {
+            return new PersonDaoPelopsImpl();
+        }
+        else if (provider.equalsIgnoreCase("hector"))
+        {
+            return new PersonDaoHectorImpl();
+        }
+        else
+        {
+            return null;
+        }
+    }
 
 }
