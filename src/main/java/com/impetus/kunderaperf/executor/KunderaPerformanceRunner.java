@@ -105,7 +105,6 @@ public class KunderaPerformanceRunner
             }
             catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -123,7 +122,6 @@ public class KunderaPerformanceRunner
             }
             catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -167,6 +165,8 @@ public class KunderaPerformanceRunner
             UserDTO user = new UserDTO();
             user.setUserId(getString("userId_", i));
             user.setUserName("Amry");
+            user.setUserNameCounter(getString("Amry_",i));
+            
             user.setPassword(getString("password_", i));
             user.setRelationshipStatus(getString("relation_", i));
             users.add(user);
@@ -197,13 +197,12 @@ public class KunderaPerformanceRunner
             {
                 // means find by key and find All.(Single vs. Batch Read)
                 long t1 = System.currentTimeMillis();
-                for(UserDTO u : users)
-                {
-                    userDao.findUserById(u.getUserId(), isBulk);
-                }
+                    userDao.findUserById(isBulk, users);
                 long t2 = System.currentTimeMillis();
-                
                 readProfiler.put(client + ":" + type + ":" + users.size() + ":" + noOfThreads + ": id" , (t2 - t1));
+                
+                // batch read.
+                userDao.findAll(users.size());
                 
                 
             } else if (pattern != null && pattern.equalsIgnoreCase("rc"))
@@ -214,15 +213,12 @@ public class KunderaPerformanceRunner
                 }
                 
                 String columnName = args[5];
-                String columnValue = args[6];
+
                 
                 //means find by secondry index(Single vs. batch read)
                 long t1 = System.currentTimeMillis();
 
-                for(UserDTO u : users)
-                {
-                    userDao.findUserByUserName(columnName,isBulk, columnValue);
-                }
+                    userDao.findUserByUserName(columnName,isBulk, users);
                 long t2 = System.currentTimeMillis();
                 
                 readProfiler.put(client + ":" + type + ":" + users.size() + ":" + noOfThreads + ": column" , (t2 - t1));

@@ -34,12 +34,15 @@ public interface UserDao
 
     public void updateUser(UserDTO userDTO);
 
-    public void findUserById(String userId, boolean isBulk);
+    public void findUserById(boolean isBulk, List<UserDTO> users);
 
-    public void findUserByUserName(String userName,boolean isBulk, String columnValue);
+    public void findUserByUserName(String userName,boolean isBulk,List<UserDTO> users);
 
     public void deleteUser(String userId);
 
     public void cleanup();
+    
+    public void findAll(int count);
+    public void findAllByUserName(int count);
 
 }

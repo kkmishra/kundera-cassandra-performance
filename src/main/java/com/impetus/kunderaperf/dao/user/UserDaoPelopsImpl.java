@@ -17,12 +17,20 @@ package com.impetus.kunderaperf.dao.user;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.cassandra.thrift.Column;
 import org.apache.cassandra.thrift.ConsistencyLevel;
+import org.apache.cassandra.thrift.IndexClause;
+import org.apache.cassandra.thrift.IndexExpression;
+import org.apache.cassandra.thrift.IndexOperator;
+import org.apache.cassandra.thrift.KeyRange;
+import org.apache.cassandra.thrift.SlicePredicate;
+import org.scale7.cassandra.pelops.Bytes;
 import org.scale7.cassandra.pelops.Mutator;
 import org.scale7.cassandra.pelops.Pelops;
+import org.scale7.cassandra.pelops.Selector;
 import org.scale7.cassandra.pelops.exceptions.PelopsException;
 
 import com.impetus.kunderaperf.dao.PelopsBaseDao;
@@ -103,18 +111,79 @@ public class UserDaoPelopsImpl extends PelopsBaseDao implements UserDao
     }
 
     @Override
-    public void findUserById(String userId, boolean isBulk)
+    public void findUserById(boolean isBulk, List<UserDTO> users)
     {
+        Selector selector = null;
+        if(isBulk)
+        {
+            selector = Pelops.createSelector(getPoolName());
+        }
+        
+        for(UserDTO u : users)
+        {
+            if(!isBulk)
+            {
+                selector = Pelops.createSelector(getPoolName());
+            }
+            
+            List<Column> columns = selector.getColumnsFromRow("User", u.getUserId(), Selector.newColumnsPredicateAll(false), ConsistencyLevel.ALL);
+            assert columns != null;
+            
+        }
     }
 
     @Override
-    public void findUserByUserName(String userName, boolean isBulk, String columnValue)
+    public void findAll(int count)
     {
+        Selector selector = Pelops.createSelector(getPoolName());
+        LinkedHashMap<Bytes, List<Column>> columns = selector.getColumnsFromRows("User", selector.newKeyRange("", "", count), false, ConsistencyLevel.ONE);
+        assert columns != null;
+    }
+    
+    @Override
+    public void findAllByUserName(int count)
+    {
+        Selector selector = Pelops.createSelector(getPoolName());
+        IndexClause idxClause = new IndexClause();
+        IndexExpression expr = new IndexExpression();
+        expr.setColumn_name("userName".getBytes());
+        expr.setValue("Amry".getBytes());
+        expr.setOp(IndexOperator.EQ);
+        idxClause.addToExpressions(expr);
+        LinkedHashMap<Bytes, List<Column>> results = selector.getIndexedColumns("User", idxClause, Selector.newColumnsPredicateAll(false, count), ConsistencyLevel.ONE);
+        assert results != null && results.size() == count; 
+    }
+
+    @Override
+    public void findUserByUserName(String userName, boolean isBulk, List<UserDTO> users)
+    {
+        Selector selector = null;
+        if(isBulk)
+        {
+            selector = Pelops.createSelector(getPoolName());
+        }
+        
+        for(UserDTO u : users)
+        {
+            if(!isBulk)
+            {
+                selector = Pelops.createSelector(getPoolName());
+            }
+            IndexClause idxClause = new IndexClause();
+            IndexExpression expr = new IndexExpression();
+            expr.setColumn_name("userNameCounter".getBytes());
+            expr.setValue(u.getUserNameCounter().getBytes());
+            expr.setOp(IndexOperator.EQ);
+            idxClause.addToExpressions(expr);
+            LinkedHashMap<Bytes, List<Column>> results = selector.getIndexedColumns("User", idxClause, Selector.newColumnsPredicateAll(false, users.size()), ConsistencyLevel.ONE);
+            assert results != null && results.size() == 1;
+        }
     }
 
     @Override
     public void deleteUser(String userId)
     {
+        
     }
 
     @Override

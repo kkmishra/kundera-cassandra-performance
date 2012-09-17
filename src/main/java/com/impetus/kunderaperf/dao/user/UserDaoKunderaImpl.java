@@ -18,6 +18,7 @@ package com.impetus.kunderaperf.dao.user;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import com.impetus.kunderaperf.dao.KunderaBaseDao;
 import com.impetus.kunderaperf.dto.UserDTO;
@@ -96,15 +97,69 @@ public class UserDaoKunderaImpl extends KunderaBaseDao implements UserDao
     }
 
     @Override
-    public void findUserById(String userId, boolean isBulk)
+    public void findUserById(boolean isBulk, List<UserDTO> users)
     {
+        EntityManager em = null;
+        if(isBulk)
+        {
+            em = emf.createEntityManager();
+        }
+        
+        for(UserDTO u : users)
+        {
+            if (!isBulk)
+            {
+                em = emf.createEntityManager();
+            }
+            
+            UserDTO result = em.find(UserDTO.class, u.getUserId());
+            assert result != null;
+        }
+    }
+
+    
+    @Override
+    public void findUserByUserName(String userName, boolean isBulk, List<UserDTO> users)
+    {
+        EntityManager em = null;
+        if(isBulk)
+        {
+            em = emf.createEntityManager();
+        }
+        
+        String sql = "Select p from UserDTO p where p.userNameCounter = ";
+        for(UserDTO u : users)
+        {
+            if (!isBulk)
+            {
+                em = emf.createEntityManager();
+            }
+        
+            Query q = em.createQuery(sql + u.getUserNameCounter());
+            assert q.getResultList() != null;
+        }
+        
     }
 
     @Override
-    public void findUserByUserName(String userName, boolean isBulk, String columnValue)
+    public void findAll(int count)
     {
+        String sql = "Select p from UserDTO p";
+        EntityManager em = emf.createEntityManager();
+        Query q = em.createQuery(sql);
+        assert q.getResultList() != null;
+    }
+    
+    @Override
+    public void findAllByUserName(int count)
+    {
+        String sql = "Select p from UserDTO p where p.userName= Amry";
+        EntityManager em = emf.createEntityManager();
+        Query q = em.createQuery(sql);
+        assert q.getResultList() != null;
     }
 
+    
     @Override
     public void deleteUser(String userId)
     {

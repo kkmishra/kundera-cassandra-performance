@@ -36,6 +36,9 @@ public class UserDTO
     @Column(name = "user_name")
     private String userName;
 
+    @Column(name = "user_nameCnt")
+    private String userNameCounter;
+
     @Column(name = "password")
     private String password;
 
@@ -110,4 +113,21 @@ public class UserDTO
         this.relationshipStatus = relationshipStatus;
     }
 
+    /**
+     * @return the userNameCounter
+     */
+    public String getUserNameCounter()
+    {
+        return userNameCounter;
+    }
+
+    /**
+     * @param userNameCounter the userNameCounter to set
+     */
+    public void setUserNameCounter(String userNameCounter)
+    {
+        this.userNameCounter = userNameCounter;
+    }
+
+    
 }

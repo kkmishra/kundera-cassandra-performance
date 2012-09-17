@@ -17,10 +17,14 @@ package com.impetus.kunderaperf.dao.user;
 
 import java.util.List;
 
+import me.prettyprint.cassandra.model.IndexedSlicesQuery;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.MutationResult;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.RangeSlicesQuery;
+import me.prettyprint.hector.api.query.SliceQuery;
 
 import com.impetus.kunderaperf.dao.HectorBaseDao;
 import com.impetus.kunderaperf.dto.UserDTO;
@@ -61,14 +65,55 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
     {
     }
 
+    /* (non-Javadoc)
+     * @see com.impetus.kunderaperf.dao.user.UserDao#findUserById(boolean, java.util.List)
+     */
     @Override
-    public void findUserById(String userId, boolean isBulk)
+    public void findUserById(boolean isBulk, List<UserDTO> users)
     {
+        SliceQuery sliceQuery = prepareSliceQuery(isBulk);
+
+        for (UserDTO u : users)
+        {
+            if (!isBulk)
+            {
+                sliceQuery = HFactory.createSliceQuery(keyspace, StringSerializer.get(), StringSerializer.get(),
+                        StringSerializer.get());
+            }
+
+            sliceQuery.setKey(u.getUserId());
+            QueryResult result = sliceQuery.execute();
+            assert result.get() != null;
+        }
+
     }
 
+    /* (non-Javadoc)
+     * @see com.impetus.kunderaperf.dao.user.UserDao#findUserByUserName(java.lang.String, boolean, java.util.List)
+     */
     @Override
-    public void findUserByUserName(String userName, boolean isBulk, String columnValue)
+    public void findUserByUserName(String userName, boolean isBulk, List<UserDTO> users)
     {
+        IndexedSlicesQuery sliceQuery = null;
+
+        if (isBulk)
+        {
+            sliceQuery = HFactory.createIndexedSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(),
+                    StringSerializer.get());
+        }
+
+        for (UserDTO u : users)
+        {
+            if (!isBulk)
+            {
+                sliceQuery = HFactory.createIndexedSlicesQuery(keyspace, StringSerializer.get(),
+                        StringSerializer.get(), StringSerializer.get());
+            }
+            sliceQuery.addEqualsExpression("user_nameCnt", u.getUserNameCounter());
+            QueryResult result = sliceQuery.execute();
+            assert result.get() != null;
+        }
+
     }
 
     @Override
@@ -91,8 +136,42 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
     }
 
     @Override
+    public void findAll(int count)
+    {
+        RangeSlicesQuery keySliceQuery = HFactory.createRangeSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        keySliceQuery.setKeys("", "");
+        keySliceQuery.setColumnFamily("User");
+        keySliceQuery.setRowCount(count);
+        QueryResult results = keySliceQuery.execute();
+        assert results.get() != null;
+        
+    }
+    
+    @Override
+    public void findAllByUserName(int count)
+    {
+        IndexedSlicesQuery idxQuery =  HFactory.createIndexedSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        idxQuery.setColumnFamily("User");
+        idxQuery.addEqualsExpression("userName", "Amry");
+        QueryResult results = idxQuery.execute();
+        assert results.get() != null;
+    }
+
+    @Override
     public void cleanup()
     {
         shutdown();
     }
+
+    private SliceQuery prepareSliceQuery(boolean isBulk)
+    {
+        SliceQuery sliceQuery = null;
+        if (isBulk)
+        {
+            sliceQuery = HFactory.createSliceQuery(keyspace, StringSerializer.get(), StringSerializer.get(),
+                    StringSerializer.get());
+        }
+        return sliceQuery;
+    }
+
 }
