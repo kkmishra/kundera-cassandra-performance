@@ -35,6 +35,6 @@ public class UserDaoTest /* extends TestCase */
     @Test
     public void testRun() throws IOException, InterruptedException
     {
-        CassandraRunner.main(null);
+        CassandraRunner.main(new String[] {"rk"});
     }
 }

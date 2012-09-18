@@ -32,7 +32,7 @@ public class ConThreadExecutor implements Runnable
     private int noOfRecs;
 
     private int counter;
-
+    
     public Thread t;
 
     public ConThreadExecutor(UserDao userDao, int noOfRecs, int counter)
@@ -58,7 +58,7 @@ public class ConThreadExecutor implements Runnable
     private List<UserDTO> prepareDataSet(final Integer rangeValue)
     {
         List<UserDTO> users = new ArrayList<UserDTO>();
-        for (int i = 0; i <= rangeValue; i++)
+        for (int i = 0; i < rangeValue; i++)
         {
             int key = rangeValue == 1 ? counter : i;
             UserDTO user = new UserDTO();

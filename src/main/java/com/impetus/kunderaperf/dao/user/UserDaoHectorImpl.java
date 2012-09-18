@@ -71,17 +71,17 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
     @Override
     public void findUserById(boolean isBulk, List<UserDTO> users)
     {
-        SliceQuery sliceQuery = prepareSliceQuery(isBulk);
+        RangeSlicesQuery sliceQuery = prepareSliceQuery(isBulk);
 
         for (UserDTO u : users)
         {
             if (!isBulk)
             {
-                sliceQuery = HFactory.createSliceQuery(keyspace, StringSerializer.get(), StringSerializer.get(),
-                        StringSerializer.get());
+                sliceQuery = HFactory.createRangeSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
             }
 
-            sliceQuery.setKey(u.getUserId());
+            sliceQuery.setRange(u.getUserId(),u.getUserId(),false,1);
+            sliceQuery.setColumnFamily("User");
             QueryResult result = sliceQuery.execute();
             assert result.get() != null;
         }
@@ -109,7 +109,10 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
                 sliceQuery = HFactory.createIndexedSlicesQuery(keyspace, StringSerializer.get(),
                         StringSerializer.get(), StringSerializer.get());
             }
-            sliceQuery.addEqualsExpression("user_nameCnt", u.getUserNameCounter());
+            
+            sliceQuery.setRange("", "",false,1);
+            sliceQuery.setColumnFamily("User");
+            sliceQuery.addEqualsExpression(userName, u.getUserNameCounter());
             QueryResult result = sliceQuery.execute();
             assert result.get() != null;
         }
@@ -139,7 +142,7 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
     public void findAll(int count)
     {
         RangeSlicesQuery keySliceQuery = HFactory.createRangeSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
-        keySliceQuery.setKeys("", "");
+        keySliceQuery.setRange("", "",false,count);
         keySliceQuery.setColumnFamily("User");
         keySliceQuery.setRowCount(count);
         QueryResult results = keySliceQuery.execute();
@@ -151,6 +154,7 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
     public void findAllByUserName(int count)
     {
         IndexedSlicesQuery idxQuery =  HFactory.createIndexedSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
+        idxQuery.setRange("", "",false,count);
         idxQuery.setColumnFamily("User");
         idxQuery.addEqualsExpression("userName", "Amry");
         QueryResult results = idxQuery.execute();
@@ -163,15 +167,14 @@ public class UserDaoHectorImpl extends HectorBaseDao implements UserDao
         shutdown();
     }
 
-    private SliceQuery prepareSliceQuery(boolean isBulk)
+    private RangeSlicesQuery prepareSliceQuery(boolean isBulk)
     {
-        SliceQuery sliceQuery = null;
+        RangeSlicesQuery keySliceQuery = null;
         if (isBulk)
         {
-            sliceQuery = HFactory.createSliceQuery(keyspace, StringSerializer.get(), StringSerializer.get(),
-                    StringSerializer.get());
+            keySliceQuery = HFactory.createRangeSlicesQuery(keyspace, StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
         }
-        return sliceQuery;
+        return keySliceQuery;
     }
 
 }

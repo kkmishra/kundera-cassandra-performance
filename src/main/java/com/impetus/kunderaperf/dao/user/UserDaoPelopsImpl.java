@@ -144,12 +144,14 @@ public class UserDaoPelopsImpl extends PelopsBaseDao implements UserDao
     public void findAllByUserName(int count)
     {
         Selector selector = Pelops.createSelector(getPoolName());
-        IndexClause idxClause = new IndexClause();
+        List<IndexExpression> experssions = new ArrayList<IndexExpression>(1);
+        IndexClause idxClause = Selector.newIndexClause(Bytes.EMPTY, count);
         IndexExpression expr = new IndexExpression();
         expr.setColumn_name("userName".getBytes());
         expr.setValue("Amry".getBytes());
         expr.setOp(IndexOperator.EQ);
-        idxClause.addToExpressions(expr);
+        experssions.add(expr);
+        idxClause.setExpressions(experssions);
         LinkedHashMap<Bytes, List<Column>> results = selector.getIndexedColumns("User", idxClause, Selector.newColumnsPredicateAll(false, count), ConsistencyLevel.ONE);
         assert results != null && results.size() == count; 
     }
@@ -169,12 +171,15 @@ public class UserDaoPelopsImpl extends PelopsBaseDao implements UserDao
             {
                 selector = Pelops.createSelector(getPoolName());
             }
-            IndexClause idxClause = new IndexClause();
+            IndexClause idxClause = Selector.newIndexClause(Bytes.EMPTY, 1);
+            
+            List<IndexExpression> experssions = new ArrayList<IndexExpression>(1);
             IndexExpression expr = new IndexExpression();
-            expr.setColumn_name("userNameCounter".getBytes());
+            expr.setColumn_name(userName.getBytes());
             expr.setValue(u.getUserNameCounter().getBytes());
             expr.setOp(IndexOperator.EQ);
-            idxClause.addToExpressions(expr);
+            experssions.add(expr);
+            idxClause.setExpressions(experssions);
             LinkedHashMap<Bytes, List<Column>> results = selector.getIndexedColumns("User", idxClause, Selector.newColumnsPredicateAll(false, users.size()), ConsistencyLevel.ONE);
             assert results != null && results.size() == 1;
         }

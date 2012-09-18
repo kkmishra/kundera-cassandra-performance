@@ -127,7 +127,7 @@ public class UserDaoKunderaImpl extends KunderaBaseDao implements UserDao
             em = emf.createEntityManager();
         }
         
-        String sql = "Select p from UserDTO p where p.userNameCounter = ";
+        String sql = "Select p from UserDTO p where p.userNameCounter = " +userName;
         for(UserDTO u : users)
         {
             if (!isBulk)
@@ -147,6 +147,7 @@ public class UserDaoKunderaImpl extends KunderaBaseDao implements UserDao
         String sql = "Select p from UserDTO p";
         EntityManager em = emf.createEntityManager();
         Query q = em.createQuery(sql);
+        q.setMaxResults(count);
         assert q.getResultList() != null;
     }
     
@@ -156,7 +157,9 @@ public class UserDaoKunderaImpl extends KunderaBaseDao implements UserDao
         String sql = "Select p from UserDTO p where p.userName= Amry";
         EntityManager em = emf.createEntityManager();
         Query q = em.createQuery(sql);
-        assert q.getResultList() != null;
+        
+        List<UserDTO> results = q.getResultList();
+        assert results != null && results.size() == count;
     }
 
     

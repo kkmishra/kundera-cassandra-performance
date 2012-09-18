@@ -67,15 +67,17 @@ public class CassandraRunner
     {
         // postBuild();
         int i;
-        // String b[] = { "1"/*, "1000", "4000", "40000", "100000", "1000000"*/
-        // };
-        // String c[] = { "1"/*, "10", "100", "1000", "10000", "40000", "50000",
-        // "100000"*/ };
-        // String cb[] = { "10"/*, "100", "1000" */};
+   
 
         String b[] = { "1", "1000", "4000", "40000", "100000", "1000000" };
         String c[] = { "1", "10", "100", "1000", "10000", "40000", "50000", "100000" };
         String cb[] = { "10", "100", "1000" };
+        //
+        // String b[] = { /*"1",*/ "1000"/*, "4000", "40000", "100000",
+        // "1000000" */};
+        // String c[] = { "1", "10", /*"100", "1000", "10000", "40000", "50000",
+        // "100000" */};
+        // String cb[] = { "10"/*, "100", "1000" */};
 
         String[] clients = { "kundera", "pelops", "hector" };
         String runType[] = { "b", "c", "cb" };
@@ -85,8 +87,8 @@ public class CassandraRunner
         keySpaceMapper.put("hector", "HectorKeyspace");
         keySpaceMapper.put("kundera", "KunderaKeyspace");
 
-        // startCassandraServer("/home/impadmin/vivek/apache-cassandra-1.0.6/bin/cassandra");
-        startCassandraServer("/root/software/apache-cassandra-1.0.6/bin/cassandra");
+        startCassandraServer("/home/impadmin/vivek/apache-cassandra-1.0.6/bin/cassandra");
+        // startCassandraServer("/root/software/apache-cassandra-1.0.6/bin/cassandra");
         for (String type : runType)
         {
             for (String client : clients)
@@ -98,8 +100,17 @@ public class CassandraRunner
                     {
                         try
                         {
-                            createKeysapce(keySpaceMapper.get(client));
-                            KunderaPerformanceRunner.main(new String[] { new String(b[i]), client, type });
+                            createKeysapce(keySpaceMapper.get(client),
+                                    argss != null && argss.length == 2 && argss[0].equalsIgnoreCase("rc"));
+                            if (argss != null)
+                            {
+                                KunderaPerformanceRunner.main(new String[] { new String(b[i]), client, type, "1",
+                                        argss[0], argss.length == 2 ? argss[1] : null });
+                            }
+                            else
+                            {
+                                KunderaPerformanceRunner.main(new String[] { new String(b[i]), client, type, "1" });
+                            }
                             dropKeyspace(keySpaceMapper.get(client));
                             // stopCassandraServer();
                         }
@@ -117,8 +128,17 @@ public class CassandraRunner
                         try
                         {
                             // startCassandraServer(args[2]);
-                            createKeysapce(keySpaceMapper.get(client));
-                            KunderaPerformanceRunner.main(new String[] { "1", client, type, new String(c[i]) });
+                            createKeysapce(keySpaceMapper.get(client),
+                                    argss != null && argss.length == 2 && argss[0].equalsIgnoreCase("rc"));
+                            if (argss != null)
+                            {
+                                KunderaPerformanceRunner.main(new String[] { "1", client, type, new String(c[i]),
+                                        argss[0], argss.length == 2 ? argss[1] : null });
+                            }
+                            else
+                            {
+                                KunderaPerformanceRunner.main(new String[] { "1", client, type, new String(c[i]) });
+                            }
                             dropKeyspace(keySpaceMapper.get(client));
                             // stopCassandraServer();
                         }
@@ -137,8 +157,17 @@ public class CassandraRunner
                         try
                         {
                             // startCassandraServer(args[2]);
-                            createKeysapce(keySpaceMapper.get(client));
-                            KunderaPerformanceRunner.main(new String[] { "1000", client, type, new String(cb[i]) });
+                            createKeysapce(keySpaceMapper.get(client),
+                                    argss != null && argss.length == 2 && argss[0].equalsIgnoreCase("rc"));
+                            if (argss != null)
+                            {
+                                KunderaPerformanceRunner.main(new String[] { "1000", client, type, new String(cb[i]),
+                                        argss[0], argss.length == 2 ? argss[1] : null });
+                            }
+                            else
+                            {
+                                KunderaPerformanceRunner.main(new String[] { "1000", client, type, new String(cb[i]) });
+                            }
                             dropKeyspace(keySpaceMapper.get(client));
                             // stopCassandraServer();
                         }
@@ -154,7 +183,13 @@ public class CassandraRunner
                 }
             }
         }
-        onGenerateDelta(KunderaPerformanceRunner.profiler);
+        String fileName = "performance_cassandra_write" + new Date() + ".xls";
+        // onGenerateDelta(KunderaPerformanceRunner.profiler, fileName);
+        if (argss[0] != null)
+        {
+            fileName = "performance_cassandra_read" + argss[0] + new Date() + ".xls";
+            onReadGenerateDelta(KunderaPerformanceRunner.readProfiler, fileName);
+        }
         stopCassandraServer();
     }
 
@@ -237,7 +272,7 @@ public class CassandraRunner
 
     private static Cassandra.Client cassandra_client;
 
-    private static void createKeysapce(String keyspace)
+    private static void createKeysapce(String keyspace, boolean createIdx)
     {
         if (cassandra_client == null)
         {
@@ -253,21 +288,41 @@ public class CassandraRunner
         {
             List<CfDef> cfDefs = new ArrayList<CfDef>();
             CfDef cfDef = new CfDef(keyspace, "User");
-            List<ColumnDef> columnDefs = new ArrayList<ColumnDef>();
-            ColumnDef name = new ColumnDef();
-            name.setName("user_name".getBytes());
-            name.setIndex_type(IndexType.KEYS);
+            cfDef.setDefault_validation_class("UTF8Type");
+            cfDef.setKey_validation_class("UTF8Type");
+            cfDef.setComparator_type("UTF8Type");
+            // cfDef.setKeyspace(keyspace);
+            // List<ColumnDef> columnDefs = new ArrayList<ColumnDef>();
+            if (createIdx)
+            {
+                ColumnDef name = new ColumnDef();
+                name.setName("user_name".getBytes());
+                name.setIndex_type(IndexType.KEYS);
+                name.setValidation_class("UTF8Type");
 
-            ColumnDef password = new ColumnDef();
-            password.setName("password".getBytes());
-            password.setIndex_type(IndexType.KEYS);
+                ColumnDef nameCnt = new ColumnDef();
+                nameCnt.setName("user_nameCnt".getBytes());
+                nameCnt.setIndex_type(IndexType.KEYS);
+                nameCnt.setValidation_class("UTF8Type");
 
-            ColumnDef relation = new ColumnDef();
-            relation.setName("relation".getBytes());
-            relation.setIndex_type(IndexType.KEYS);
+                ColumnDef password = new ColumnDef();
+                password.setName("password".getBytes());
+                password.setIndex_type(IndexType.KEYS);
+                password.setValidation_class("UTF8Type");
 
-            cfDef.column_metadata = columnDefs;
+                ColumnDef relation = new ColumnDef();
+                relation.setName("relation".getBytes());
+                relation.setIndex_type(IndexType.KEYS);
+                relation.setValidation_class("UTF8Type");
 
+                cfDef.addToColumn_metadata(name);
+                cfDef.addToColumn_metadata(nameCnt);
+                cfDef.addToColumn_metadata(password);
+                cfDef.addToColumn_metadata(relation);
+                //
+                // cfDef.column_metadata = columnDefs;
+
+            }
             cfDefs.add(cfDef);
             ksDef = new KsDef(keyspace, "org.apache.cassandra.locator.SimpleStrategy", cfDefs);
             ksDef.setReplication_factor(1);
@@ -371,7 +426,7 @@ public class CassandraRunner
         emailSender.setHost(host);
         // emailSender.setPort(port);
         emailSender.setUsername("vivek.mishra@impetus.co.in");
-        emailSender.setPassword("Password~22");
+//        emailSender.setPassword("********");
         emailSender.setJavaMailProperties(props);
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(new String[] { "vivek.mishra@impetus.co.in", "amresh.singh@impetus.co.in",
@@ -387,27 +442,24 @@ public class CassandraRunner
 
         mail.setText("Kundera/Pelops Performance Delta ==>" + kundera_pelops_delta + "\n"
                 + "Kundera/Hector Performance Delta ==>" + kundera_hector_delta);
-        emailSender.send(mail);
+        // emailSender.send(mail);
     }
 
-    private static void onGenerateDelta(Map<String, Long> profiledData) throws FileNotFoundException, IOException
+    private static void onGenerateDelta(Map<String, Long> profiledData, String fileName) throws FileNotFoundException,
+            IOException
     {
-        // String b[] = { "1", "1000", "4000", "40000", "100000", "1000000" };
-        // String c[] = { "1", "10", "100", "1000", "10000", "40000", "50000",
-        // "100000" };
-        // String cb[] = { "10", "100", "1000" };
-
-        // String b[] = { "1"/*, "1000", "4000", "40000", "100000", "1000000"*/
-        // };
-        // String c[] = { "1"/*, "10", "100", "1000", "10000", "40000", "50000",
-        // "100000"*/ };
-        // String cb[] = { "10"/*, "100", "1000" */};
 
         String b[] = { "1", "1000", "4000", "40000", "100000", "1000000" };
         String c[] = { "1", "10", "100", "1000", "10000", "40000", "50000", "100000" };
         String cb[] = { "10", "100", "1000" };
+        //
+        // String b[] = { /*"1",*/ "1000"/*, "4000", "40000", "100000",
+        // "1000000" */};
+        // String c[] = { "1", "10", /*"100", "1000", "10000", "40000", "50000",
+        // "100000" */};
+        // String cb[] = { "10"/*, "100", "1000" */};
 
-        String fileName = "performance_cassandra" + new Date() + ".xls";
+        // String fileName = "performance_cassandra" + new Date() + ".xls";
         HSSFWorkbook workBook = new HSSFWorkbook();
         workBook = generateDelta(b, profiledData, workBook, "Bulk", "b");
         workBook = generateDelta(c, profiledData, workBook, "Concurrent", "c");
@@ -440,6 +492,191 @@ public class CassandraRunner
         }
 
         postBuild();
+    }
+
+    private static void onReadGenerateDelta(Map<String, Long> profiledData, String fileName)
+            throws FileNotFoundException, IOException
+    {
+        // String b[] = { "1", "1000", "4000", "40000", "100000", "1000000" };
+        // String c[] = { "1", "10", "100", "1000", "10000", "40000", "50000",
+        // "100000" };
+        // String cb[] = { "10", "100", "1000" };
+
+        // String b[] = { "1"/*, "1000", "4000", "40000", "100000", "1000000"*/
+        // };
+        // String c[] = { "1"/*, "10", "100", "1000", "10000", "40000", "50000",
+        // "100000"*/ };
+        // String cb[] = { "10"/*, "100", "1000" */};
+
+        // String b[] = { "1", "1000", "4000", "40000", "100000", "1000000" };
+        // String c[] = { "1", "10", "100", "1000", "10000", "40000", "50000",
+        // "100000" };
+        // String cb[] = { "10", "100", "1000" };
+
+        String b[] = { /* "1", */"1000"/* , "4000", "40000", "100000", "1000000" */};
+        String c[] = { "1", "10", /*
+                                   * "100", "1000", "10000", "40000", "50000",
+                                   * "100000"
+                                   */};
+        String cb[] = { "10"/* , "100", "1000" */};
+
+        // String fileName = "performance_cassandra" + new Date() + ".xls";
+        HSSFWorkbook workBook = new HSSFWorkbook();
+        workBook = generateReadDelta(b, profiledData, workBook, "Bulk", "b");
+        workBook = generateReadDelta(c, profiledData, workBook, "Concurrent", "c");
+        workBook = generateReadDelta(cb, profiledData, workBook, "Concurrent-Bulk", "cb");
+
+        FileOutputStream fos = null;
+        try
+        {
+            fos = new FileOutputStream(new File(fileName));
+            workBook.write(fos);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if (fos != null)
+            {
+                try
+                {
+                    fos.flush();
+                    fos.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        postBuild();
+    }
+
+    private static HSSFWorkbook generateReadDelta(String[] type, Map<String, Long> profiledData, HSSFWorkbook workBook,
+            String sheetName, String keyType) throws FileNotFoundException, IOException
+    {
+
+        // String[] clients = {"pelops", "hector","kundera"};
+
+        // client + ":" + type + ":" + users.size() + ":" + noOfThreads +
+        // ":column:b"
+        String[] clients = { "kundera", "pelops", "hector" };
+
+        int count = 2;
+        HSSFSheet sheet = initReadSheet(workBook, sheetName);
+        int nextRowCount = 2;
+        for (String t : type)
+        {
+            int intnoOfthreads = 1;
+            String noOfRecord = t;
+            // set on no of record and threads.
+
+            if (keyType.equals("c"))
+            {
+                intnoOfthreads = Integer.parseInt(t);
+                noOfRecord = 1 + "";
+            }
+            else if (keyType.equals("cb"))
+            {
+                intnoOfthreads = Integer.parseInt(t);
+                noOfRecord = 1000 + "";
+            }
+
+            String keySeperator = ":" + keyType;
+
+            HSSFRow dataRow = sheet.createRow(nextRowCount);
+            HSSFCell noOfThreadCell = dataRow.createCell(0);
+            noOfThreadCell.setCellValue(intnoOfthreads);
+            HSSFCell noOfRecordsCell = dataRow.createCell(1);
+            noOfRecordsCell.setCellValue(noOfRecord);
+
+            int clientCnt = 2;
+
+            // iterate for earch client.
+            double[] cellValArr = new double[6];
+            Integer cnt = 0;
+            for (String client : clients)
+            {
+                String key = client + keySeperator + ":" + noOfRecord + ":" + intnoOfthreads + ":column:s";
+                // client + ":" + type + ":" + users.size() + ":" + noOfThreads
+                // + ":column:b"
+                // System.out.println(key);
+                Long timeTaken = profiledData.get(key);
+                if (timeTaken == null)
+                {
+                    // means it is for findbyId.
+                    key = client + keySeperator + ":" + noOfRecord + ":" + intnoOfthreads + ":id:s";
+
+                    // batch read.
+                    timeTaken = profiledData.get(key);
+                    // System.out.println(timeTaken);
+                    // clientCnt = populateCell(dataRow, clientCnt, cellValArr,
+                    // cnt, timeTaken);
+                    HSSFCell clientCell = dataRow.createCell(clientCnt);
+
+                    clientCell.setCellValue(timeTaken);
+                    clientCnt++;
+                    cellValArr[cnt++] = timeTaken;
+
+                    key = client + keySeperator + ":" + noOfRecord + ":" + intnoOfthreads + ":id:b";
+                    timeTaken = profiledData.get(key);
+                    // clientCnt = populateCell(dataRow, clientCnt, cellValArr,
+                    // cnt, timeTaken);
+                    /* HSSFCell */clientCell = dataRow.createCell(clientCnt);
+
+                    clientCell.setCellValue(timeTaken);
+                    clientCnt++;
+                    cellValArr[cnt++] = timeTaken;
+
+                }
+                else
+                {
+                    timeTaken = profiledData.get(key);
+                    // clientCnt = populateCell(dataRow, clientCnt, cellValArr,
+                    // cnt, timeTaken);
+                    HSSFCell clientCell = dataRow.createCell(clientCnt);
+
+                    clientCell.setCellValue(timeTaken);
+                    clientCnt++;
+                    cellValArr[cnt++] = timeTaken;
+
+                    key = client + keySeperator + ":" + noOfRecord + ":" + intnoOfthreads + ":column:b";
+                    timeTaken = profiledData.get(key);
+
+                    clientCell = dataRow.createCell(clientCnt);
+
+                    clientCell.setCellValue(timeTaken);
+                    clientCnt++;
+                    cellValArr[cnt++] = timeTaken;
+                }
+
+            }
+
+            HSSFCell kundera_hector_single = dataRow.createCell(clientCnt++);
+            kundera_hector_delta = ((cellValArr[0] - cellValArr[4]) / cellValArr[4]) * 100 + "%";
+            kundera_hector_single.setCellValue(((cellValArr[0] - cellValArr[4]) / cellValArr[4]) * 100);
+
+            HSSFCell kundera_pelops_single = dataRow.createCell(clientCnt++);
+            kundera_pelops_delta = ((cellValArr[0] - cellValArr[2]) / cellValArr[2]) * 100 + "%";
+            kundera_pelops_single.setCellValue(((cellValArr[0] - cellValArr[2]) / cellValArr[2]) * 100);
+
+            // batch
+            kundera_hector_single = dataRow.createCell(clientCnt++);
+            kundera_hector_delta = ((cellValArr[1] - cellValArr[5]) / cellValArr[5]) * 100 + "%";
+            kundera_hector_single.setCellValue(((cellValArr[1] - cellValArr[5]) / cellValArr[5]) * 100);
+
+            kundera_pelops_single = dataRow.createCell(clientCnt);
+            kundera_pelops_delta = ((cellValArr[1] - cellValArr[3]) / cellValArr[3]) * 100 + "%";
+            kundera_pelops_single.setCellValue(((cellValArr[1] - cellValArr[3]) / cellValArr[3]) * 100);
+
+            count++;
+        }
+
+        return workBook;
+
     }
 
     private static HSSFWorkbook generateDelta(String[] type, Map<String, Long> profiledData, HSSFWorkbook workBook,
@@ -487,8 +724,10 @@ public class CassandraRunner
                 String key = client + keySeperator + ":" + noOfRecord + ":" + intnoOfthreads;
                 // System.out.println(key);
                 Long timeTaken = profiledData.get(key);
-                // System.out.println(timeTaken);
+                // clientCnt = populateCell(dataRow, clientCnt, cellValArr, cnt,
+                // timeTaken);
                 HSSFCell clientCell = dataRow.createCell(clientCnt);
+
                 clientCell.setCellValue(timeTaken);
                 clientCnt++;
                 cellValArr[cnt++] = timeTaken;
@@ -538,4 +777,54 @@ public class CassandraRunner
         cell7.setCellValue("kundera-pelops(%)");
         return sheet;
     }
+
+    private static HSSFSheet initReadSheet(HSSFWorkbook workbook, String sheetName)
+    {
+        HSSFSheet sheet = workbook.createSheet(sheetName);
+
+        HSSFRow row0 = sheet.createRow(0);
+        HSSFCell cell0 = row0.createCell(0);
+        cell0.setCellValue("Performance Analysis:");
+
+        HSSFRow row1 = sheet.createRow(1);
+
+        HSSFCell cell1 = row1.createCell(0);
+        cell1.setCellValue("NoOfThreads");
+        HSSFCell cell2 = row1.createCell(1);
+        cell2.setCellValue("NoOfRecords");
+
+        HSSFCell cell3 = row1.createCell(2);
+        cell3.setCellValue("Kundera-Single");
+
+        HSSFCell cell4 = row1.createCell(3);
+        cell4.setCellValue("Kundera-Batch");
+
+        HSSFCell cell5 = row1.createCell(4);
+        cell5.setCellValue("Pelops-Single");
+
+        HSSFCell cell6 = row1.createCell(5);
+
+        cell6.setCellValue("Pelops-Batch");
+
+        HSSFCell cell7 = row1.createCell(6);
+        cell7.setCellValue("Hector-Single");
+
+        HSSFCell cell8 = row1.createCell(7);
+        cell8.setCellValue("Hector-Batch");
+
+        HSSFCell cell9 = row1.createCell(8);
+        cell9.setCellValue("kundera-hector-Single(%)");
+
+        HSSFCell cell10 = row1.createCell(9);
+        cell10.setCellValue("kundera-pelops-Single(%)");
+
+        HSSFCell cell11 = row1.createCell(10);
+        cell11.setCellValue("kundera-hector-batch(%)");
+
+        HSSFCell cell12 = row1.createCell(11);
+        cell12.setCellValue("kundera-pelops-batch(%)");
+
+        return sheet;
+    }
+
 }
