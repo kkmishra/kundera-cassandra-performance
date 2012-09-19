@@ -127,7 +127,7 @@ public class UserDaoKunderaImpl extends KunderaBaseDao implements UserDao
             em = emf.createEntityManager();
         }
         
-        String sql = "Select p from UserDTO p where p.userNameCounter = " +userName;
+        String sql = "Select p from UserDTO p where p.userNameCounter = ";
         for(UserDTO u : users)
         {
             if (!isBulk)
