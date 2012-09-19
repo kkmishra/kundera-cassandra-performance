@@ -183,8 +183,9 @@ public class CassandraRunner
                 }
             }
         }
+        
         String fileName = "performance_cassandra_write" + new Date() + ".xls";
-        // onGenerateDelta(KunderaPerformanceRunner.profiler, fileName);
+         onGenerateDelta(KunderaPerformanceRunner.profiler, fileName);
         if (argss[0] != null)
         {
             fileName = "performance_cassandra_read" + argss[0] + new Date() + ".xls";
